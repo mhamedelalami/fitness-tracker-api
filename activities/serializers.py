@@ -1,23 +1,22 @@
 from rest_framework import serializers
-from .models import Activity  # assuming these are your models
-
-class ActivityTypeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Activity
-        fields = ['id', 'name', 'description']  # adjust fields based on your model
+from .models import Activity
 
 class ActivitySerializer(serializers.ModelSerializer):
-    user = serializers.ReadOnlyField(source='user.username')
-    activity_type = serializers.PrimaryKeyRelatedField(
-        queryset=Activity.objects.all()
-    )
+    user = serializers.ReadOnlyField(source='user.username')  # user is read-only
 
     class Meta:
         model = Activity
-        fields = ['id', 'user', 'activity_type', 'duration', 'distance', 'calories', 'date']
+        fields = [
+            'id',
+            'user',
+            'activity_type',
+            'duration_minutes',
+            'distance_km',
+            'calories_burned',
+            'date',
+            'notes'
+        ]
 
     def create(self, validated_data):
-        # assign the current logged-in user automatically
         user = self.context['request'].user
-        activity = Activity.objects.create(user=user, **validated_data)
-        return activity
+        return Activity.objects.create(user=user, **validated_data)
