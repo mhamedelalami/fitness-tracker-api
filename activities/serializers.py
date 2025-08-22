@@ -20,3 +20,9 @@ class ActivitySerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = self.context['request'].user
         return Activity.objects.create(user=user, **validated_data)
+
+
+class ActivitySummarySerializer(serializers.Serializer):
+    total_calories = serializers.IntegerField()
+    total_distance = serializers.FloatField()
+    total_duration = serializers.IntegerField()

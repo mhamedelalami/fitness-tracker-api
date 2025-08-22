@@ -1,6 +1,6 @@
 from django.urls import path
 from users.views import RegisterView, UserProfileView, CustomLoginView
-from activities.views import ActivityListCreateView, ActivityDetailView
+from activities.views import ActivityListCreateView, ActivityDetailView, ActivitySummaryView
 from rest_framework_simplejwt.views import TokenRefreshView
 
 urlpatterns = [
@@ -17,4 +17,7 @@ urlpatterns = [
     # JWT token endpoints
     path('api/auth/login/', CustomLoginView.as_view(), name='login'),
     path('api/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+
+    # Activity summary
+    path('api/activities/summary/', ActivitySummaryView.as_view(), name='activities_summary'),
 ]
