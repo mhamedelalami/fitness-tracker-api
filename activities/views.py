@@ -32,7 +32,7 @@ class ActivityDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         """
-        Ensure users can only access their own activities.
+        Ensure users can only access, update, or delete their own activities.
         """
         return Activity.objects.filter(user=self.request.user)
 
@@ -41,6 +41,9 @@ class ActivitySummaryView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
+        """
+        Return total calories, distance, and duration for the logged-in user.
+        """
         user = request.user
         summary = Activity.objects.filter(user=user).aggregate(
             total_calories=Sum('calories_burned'),

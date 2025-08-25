@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Fitness Tracker Demo</title>
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif; /* modern clean font */
+    }
+    .input-error {
+      color: red;
+      font-size: 0.9em;
+      margin-top: 4px;
+      display: block;
+    }
+    .notification {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    .notification.success {
+      color: green;
+    }
+    .notification.error {
+      color: red;
+    }
+  </style>
+</head>
+
+<body>
+<div id="container">
+
+  <h1>Fitness Tracker Demo</h1>
+
+  <!-- Register Section -->
+  <div class="section card" id="registerSection">
+    <h2>Register</h2>
+    <input type="text" id="registerUsername" placeholder="Username">
+    <span class="input-error" id="registerUsernameError"></span>
+    <input type="email" id="registerEmail" placeholder="Email">
+    <span class="input-error" id="registerEmailError"></span>
+    <input type="password" id="registerPassword" placeholder="Password">
+    <span class="input-error" id="registerPasswordError"></span>
+    <input type="text" id="registerFirstName" placeholder="First Name">
+    <span class="input-error" id="registerFirstNameError"></span>
+    <input type="text" id="registerLastName" placeholder="Last Name">
+    <span class="input-error" id="registerLastNameError"></span>
+    <button onclick="register()">Register</button>
+    <div class="notification" id="registerNotification"></div>
+  </div>
+
+  <!-- Login Section -->
+  <div class="section card" id="loginSection">
+    <h2>Login</h2>
+    <input type="text" id="loginUsername" placeholder="Username">
+    <span class="input-error" id="loginUsernameError"></span>
+    <input type="password" id="loginPassword" placeholder="Password">
+    <span class="input-error" id="loginPasswordError"></span>
+    <button onclick="login()">Login</button>
+    <div class="notification" id="loginNotification"></div>
+  </div>
+
+  <!-- Add Activity Section -->
+  <div class="section card" id="activitySection">
+    <h2>Add Activity</h2>
+    <select id="activityType">
+      <option value="">Select Activity</option>
+      <option value="running">Running</option>
+      <option value="cycling">Cycling</option>
+      <option value="walking">Walking</option>
+      <option value="swimming">Swimming</option>
+    </select>
+    <span class="input-error" id="activityTypeError"></span>
+    <input type="number" id="duration" placeholder="Duration (minutes)">
+    <span class="input-error" id="durationError"></span>
+    <input type="number" id="distance" placeholder="Distance (km)">
+    <span class="input-error" id="distanceError"></span>
+    <input type="number" id="calories" placeholder="Calories burned">
+    <span class="input-error" id="caloriesError"></span>
+    <input type="date" id="activityDate">
+    <span class="input-error" id="activityDateError"></span>
+    <button onclick="addActivity()">Add Activity</button>
+    <div class="notification" id="activityNotification"></div>
+  </div>
+
+  <!-- Filter Section -->
+  <div class="section card">
+    <h2>Filter Activities</h2>
+    <select id="filterType">
+      <option value="">All</option>
+      <option value="running">Running</option>
+      <option value="cycling">Cycling</option>
+      <option value="walking">Walking</option>
+      <option value="swimming">Swimming</option>
+    </select>
+    <input type="date" id="filterDate">
+    <button onclick="fetchActivities()">Apply Filter</button>
+  </div>
+
+  <!-- Activity List Section -->
+  <div class="section card">
+    <h2>Activity List</h2>
+    <div id="filterNotification" class="notification"></div> <!-- NEW -->
+    <table id="activityTable">
+      <tr>
+        <th>Type</th>
+        <th>Duration</th>
+        <th>Distance</th>
+        <th>Calories</th>
+        <th>Date</th>
+        <th>Actions</th>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Summary Section -->
+  <div class="section card">
+    <h2>Summary</h2>
+    <p id="summary"></p>
+  </div>
+
+</div>
+
+<script>
+const API_URL = "http://127.0.0.1:8000/api";
+let token = "";
+
+// Maps backend fields to input-error spans
+const errorFieldMap = {
+  username: "registerUsernameError",
+  email: "registerEmailError",
+  password: "registerPasswordError",
+  first_name: "registerFirstNameError",
+  last_name: "registerLastNameError",
+
+  activity_type: "activityTypeError",
+  duration_minutes: "durationError",
+  distance_km: "distanceError",
+  calories_burned: "caloriesError",
+  date: "activityDateError"
+};
+
+// Show notification
+function showNotification(message, isError=false, section="") {
+  let noteId = section + "Notification";
+  const note = document.getElementById(noteId);
+  if (!note) return;
+  note.innerText = message;
+  note.className = "notification " + (isError ? "error" : "success");
+  setTimeout(() => { note.innerText = ""; note.className = "notification"; }, 5000);
+}
+
+// Clear input errors inside a section
+function clearInputErrors(sectionPrefix) {
+  document.querySelectorAll(`#${sectionPrefix} .input-error`).forEach(el => el.innerText = "");
+}
+
+// ---------------- REGISTER ----------------
+async function register() {
+  const username = document.getElementById("registerUsername").value.trim();
+  const email = document.getElementById("registerEmail").value.trim();
+  const password = document.getElementById("registerPassword").value.trim();
+  const first_name = document.getElementById("registerFirstName").value.trim();
+  const last_name = document.getElementById("registerLastName").value.trim();
+
+  clearInputErrors("registerSection");
+
+  let hasError = false;
+  if (!username) { document.getElementById("registerUsernameError").innerText = "Username is required"; hasError = true; }
+  if (!email) { document.getElementById("registerEmailError").innerText = "Email is required"; hasError = true; }
+  if (!password) { document.getElementById("registerPasswordError").innerText = "Password is required"; hasError = true; }
+  if (!first_name) { document.getElementById("registerFirstNameError").innerText = "First name is required"; hasError = true; }
+  if (!last_name) { document.getElementById("registerLastNameError").innerText = "Last name is required"; hasError = true; }
+  if (hasError) return;
+
+  const res = await fetch(`${API_URL}/auth/register/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, email, password, first_name, last_name })
+  });
+
+  const data = await res.json();
+  if(res.ok) {
+    showNotification("Registration successful! Please login.", false, "register");
+
+    // Reset the register form
+    document.getElementById("registerUsername").value = "";
+    document.getElementById("registerEmail").value = "";
+    document.getElementById("registerPassword").value = "";
+    document.getElementById("registerFirstName").value = "";
+    document.getElementById("registerLastName").value = "";
+  } else {
+    for (const key in data.errors || data) {
+      if (errorFieldMap[key]) {
+        document.getElementById(errorFieldMap[key]).innerText = Array.isArray(data.errors?.[key] || data[key])
+          ? (data.errors?.[key] || data[key]).join(", ")
+          : (data.errors?.[key] || data[key]);
+      }
+    }
+  }
+}
+
+// ---------------- LOGIN ----------------
+async function login() {
+  const username = document.getElementById("loginUsername").value.trim();
+  const password = document.getElementById("loginPassword").value.trim();
+
+  clearInputErrors("loginSection");
+
+  let hasError = false;
+  if (!username) { document.getElementById("loginUsernameError").innerText = "Username is required"; hasError = true; }
+  if (!password) { document.getElementById("loginPasswordError").innerText = "Password is required"; hasError = true; }
+  if (hasError) return;
+
+  const res = await fetch(`${API_URL}/auth/login/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password })
+  });
+
+  if(res.ok) {
+    const data = await res.json();
+    token = data.access;
+    showNotification("Login successful!", false, "login");
+
+    // Reset login form
+    document.getElementById("loginUsername").value = "";
+    document.getElementById("loginPassword").value = "";
+
+    fetchActivities();
+    fetchSummary();
+  } else {
+    const data = await res.json();
+    showNotification(data.detail || "Login failed!", true, "login");
+  }
+}
+
+// ---------------- ADD ACTIVITY ----------------
+async function addActivity() {
+  const type = document.getElementById("activityType").value.trim();
+  const duration = document.getElementById("duration").value.trim();
+  const distance = document.getElementById("distance").value.trim();
+  const calories = document.getElementById("calories").value.trim();
+  const date = document.getElementById("activityDate").value.trim();
+
+  clearInputErrors("activitySection");
+
+  let hasError = false;
+  if (!type) { document.getElementById("activityTypeError").innerText = "Select an activity"; hasError = true; }
+  if (!duration) { document.getElementById("durationError").innerText = "Duration is required"; hasError = true; }
+  if (!distance) { document.getElementById("distanceError").innerText = "Distance is required"; hasError = true; }
+  if (!calories) { document.getElementById("caloriesError").innerText = "Calories burned is required"; hasError = true; }
+  if (!date) { document.getElementById("activityDateError").innerText = "Date is required"; hasError = true; }
+  if (hasError) return;
+
+  try {
+    const res = await fetch(`${API_URL}/activities/`, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json", 
+        "Authorization": `Bearer ${token}` 
+      },
+      body: JSON.stringify({
+        activity_type: type, 
+        duration_minutes: duration, 
+        distance_km: distance, 
+        calories_burned: calories, 
+        date
+      })
+    });
+
+    const data = await res.json();
+
+    if(res.ok) {
+      showNotification("Activity added!", false, "activity");
+      await fetchActivities();
+      await fetchSummary();
+
+      document.getElementById("activityType").selectedIndex = 0;
+      document.getElementById("duration").value = "";
+      document.getElementById("distance").value = "";
+      document.getElementById("calories").value = "";
+      document.getElementById("activityDate").value = "";
+    } else {
+      for (const key in data) {
+        if (errorFieldMap[key]) {
+          document.getElementById(errorFieldMap[key]).innerText = 
+            Array.isArray(data[key]) ? data[key].join(", ") : data[key];
+        }
+      }
+    }
+  } catch (error) {
+    showNotification("Error connecting to server.", true, "activity");
+    console.error(error);
+  }
+}
+
+// ---------------- FETCH ACTIVITIES ----------------
+async function fetchActivities() {
+  const typeFilter = document.getElementById("filterType").value;
+  const dateFilter = document.getElementById("filterDate").value;
+
+  let url = `${API_URL}/activities/?`;
+  if(typeFilter) url += `activity_type=${typeFilter}&`;
+  if(dateFilter) url += `date=${dateFilter}&`;
+  if(url.endsWith("&")) url = url.slice(0, -1);
+
+  const res = await fetch(url, { headers: { "Authorization": `Bearer ${token}` } });
+  const data = await res.json();
+
+  const table = document.getElementById("activityTable");
+  const filterNote = document.getElementById("filterNotification");
+
+  // Clear previous table and notification
+  table.innerHTML = `<tr>
+    <th>Type</th><th>Duration</th><th>Distance</th><th>Calories</th><th>Date</th><th>Actions</th>
+  </tr>`;
+  filterNote.innerText = "";
+  filterNote.className = "notification";
+
+  if(data.length === 0) {
+    filterNote.innerText = "No activities found";
+    filterNote.className = "notification error";
+    return;
+  }
+
+  data.forEach(act => {
+    const row = table.insertRow();
+    row.insertCell(0).innerText = act.activity_type;
+    row.insertCell(1).innerText = act.duration_minutes;
+    row.insertCell(2).innerText = act.distance_km;
+    row.insertCell(3).innerText = act.calories_burned;
+    row.insertCell(4).innerText = act.date;
+    const actions = row.insertCell(5);
+    actions.innerHTML = `<button onclick="deleteActivity(${act.id})">Delete</button>
+                         <button onclick="updateActivity(${act.id})">Update</button>`;
+  });
+}
+
+// ---------------- DELETE ACTIVITY ----------------
+async function deleteActivity(id) {
+  const res = await fetch(`${API_URL}/activities/${id}/`, {
+    method: "DELETE",
+    headers: { "Authorization": `Bearer ${token}` }
+  });
+  if(res.ok) {
+    showNotification("Activity deleted!", false, "activity");
+    fetchActivities();
+    fetchSummary();
+  }
+}
+
+// ---------------- UPDATE ACTIVITY ----------------
+async function updateActivity(id) {
+  const type = prompt("New Activity Type (running, cycling, walking, swimming):");
+  const duration = prompt("New Duration (minutes):");
+  const distance = prompt("New Distance (km):");
+  const calories = prompt("New Calories burned:");
+  const date = prompt("New Date (YYYY-MM-DD):");
+
+  let body = {};
+  if(type) body.activity_type = type;
+  if(duration) body.duration_minutes = Number(duration);
+  if(distance) body.distance_km = Number(distance);
+  if(calories) body.calories_burned = Number(calories);
+  if(date) body.date = date;
+
+  const res = await fetch(`${API_URL}/activities/${id}/`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+    body: JSON.stringify(body)
+  });
+
+  if(res.ok) {
+    showNotification("Activity updated!", false, "activity");
+    fetchActivities();
+    fetchSummary();
+  } else {
+    const data = await res.json();
+    for (const key in data) {
+      if (errorFieldMap[key]) {
+        document.getElementById(errorFieldMap[key]).innerText = Array.isArray(data[key]) ? data[key].join(", ") : data[key];
+      }
+    }
+  }
+}
+
+// ---------------- FETCH SUMMARY ----------------
+async function fetchSummary() {
+  const res = await fetch(`${API_URL}/activities/summary/`, {
+    headers: { "Authorization": `Bearer ${token}` }
+  });
+  const data = await res.json();
+  document.getElementById("summary").innerText =
+    `Total Calories: ${data.total_calories}, Total Distance: ${data.total_distance} km, Total Duration: ${data.total_duration} min`;
+}
+</script>
+
+</body>
+</html>

@@ -5,12 +5,29 @@ from rest_framework import status, generics, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.shortcuts import render
+
+def home(request):
+    return render(request, "home.html")
 
 # User registration
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     permission_classes = [permissions.AllowAny]
     serializer_class = RegisterSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            return Response(
+                {"message": "Registration successful", "user": UserSerializer(user).data},
+                status=status.HTTP_201_CREATED
+            )
+        return Response(
+            {"message": "Registration failed", "errors": serializer.errors},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 # Current authenticated user profile
 class UserProfileView(generics.RetrieveUpdateAPIView):

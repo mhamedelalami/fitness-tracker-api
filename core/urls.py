@@ -3,7 +3,13 @@ from users.views import RegisterView, UserProfileView, CustomLoginView
 from activities.views import ActivityListCreateView, ActivityDetailView, ActivitySummaryView
 from rest_framework_simplejwt.views import TokenRefreshView
 
+from django.contrib import admin
+from users.views import home
+
 urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('', home, name='home'), 
+    
     # Registration
     path('api/auth/register/', RegisterView.as_view(), name='register'),
 
