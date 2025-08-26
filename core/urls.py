@@ -6,8 +6,8 @@ from rest_framework_simplejwt.views import TokenRefreshView
 from django.contrib import admin
 
 # Redirect /api/ to the homepage
-# def api_root_redirect(request):
-#     return redirect('/')  # Redirects to your home page
+def api_root_redirect(request):
+    return redirect('/')  # Redirects to your home page
 
 urlpatterns = [
     path('admin/', admin.site.urls),
