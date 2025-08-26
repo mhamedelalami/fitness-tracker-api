@@ -14,11 +14,11 @@ SECRET_KEY = os.environ.get(
     "django-insecure-ln@fevd66m5-wn)w@t7v3ton^3mr+6*n_89p3*zd_m&+bnt_yk"  # fallback for dev
 )
 
-# Turn off debug in production
-DEBUG = os.environ.get("DJANGO_DEBUG", "") != "False"
+# False in production (set DJANGO_DEBUG=False in env on PythonAnywhere)
+DEBUG = os.environ.get("DJANGO_DEBUG", "True") == "True"
 
 # On PythonAnywhere, add your domain (e.g. yourusername.pythonanywhere.com)
-ALLOWED_HOSTS = ["127.0.0.1", "localhost", ".pythonanywhere.com"]
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost,.pythonanywhere.com").split(",")
 
 
 # ----------------------
@@ -105,7 +105,14 @@ USE_TZ = True
 # STATIC FILES
 # ----------------------
 STATIC_URL = "/static/"
-STATICFILES_DIRS = [BASE_DIR / "static"]  # for collectstatic on deployment
+
+# Where collectstatic will put files in production
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# Keep this for local dev (safe to have both)
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
 
 
 # ----------------------
@@ -128,8 +135,6 @@ REST_FRAMEWORK = {
 # ----------------------
 # SIMPLE JWT SETTINGS
 # ----------------------
-# from rest_framework_simplejwt.authentication import JWTAuthentication
-
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
