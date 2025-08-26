@@ -124,12 +124,16 @@
 </div>
 
 <script>
-{% comment %} const API_URL = "http://127.0.0.1:8000/api";
-let token = ""; {% endcomment %}
+// FIXED: Proper API URL detection with debugging
+const hostname = window.location.hostname;
+console.log("Current hostname:", hostname);
 
-const API_URL = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost"
+const API_URL = (hostname === "127.0.0.1" || hostname === "localhost")
   ? "http://127.0.0.1:8000/api"   // local development
-  : "https://simoalamidev.pythonanywhere.com/api";  // production
+  : `https://${hostname}/api`;     // production - uses current hostname
+
+console.log("API_URL set to:", API_URL);
+
 let token = "";
 
 // Optional: show token in console for debugging
@@ -186,30 +190,36 @@ async function register() {
   if (!last_name) { document.getElementById("registerLastNameError").innerText = "Last name is required"; hasError = true; }
   if (hasError) return;
 
-  const res = await fetch(`${API_URL}/auth/register/`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, email, password, first_name, last_name })
-  });
+  try {
+    console.log("Making register request to:", `${API_URL}/auth/register/`);
+    const res = await fetch(`${API_URL}/auth/register/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, email, password, first_name, last_name })
+    });
 
-  const data = await res.json();
-  if(res.ok) {
-    showNotification("Registration successful! Please login.", false, "register");
+    const data = await res.json();
+    if(res.ok) {
+      showNotification("Registration successful! Please login.", false, "register");
 
-    // Reset the register form
-    document.getElementById("registerUsername").value = "";
-    document.getElementById("registerEmail").value = "";
-    document.getElementById("registerPassword").value = "";
-    document.getElementById("registerFirstName").value = "";
-    document.getElementById("registerLastName").value = "";
-  } else {
-    for (const key in data.errors || data) {
-      if (errorFieldMap[key]) {
-        document.getElementById(errorFieldMap[key]).innerText = Array.isArray(data.errors?.[key] || data[key])
-          ? (data.errors?.[key] || data[key]).join(", ")
-          : (data.errors?.[key] || data[key]);
+      // Reset the register form
+      document.getElementById("registerUsername").value = "";
+      document.getElementById("registerEmail").value = "";
+      document.getElementById("registerPassword").value = "";
+      document.getElementById("registerFirstName").value = "";
+      document.getElementById("registerLastName").value = "";
+    } else {
+      for (const key in data.errors || data) {
+        if (errorFieldMap[key]) {
+          document.getElementById(errorFieldMap[key]).innerText = Array.isArray(data.errors?.[key] || data[key])
+            ? (data.errors?.[key] || data[key]).join(", ")
+            : (data.errors?.[key] || data[key]);
+        }
       }
     }
+  } catch (error) {
+    console.error("Register error:", error);
+    showNotification("Error connecting to server.", true, "register");
   }
 }
 
@@ -225,26 +235,33 @@ async function login() {
   if (!password) { document.getElementById("loginPasswordError").innerText = "Password is required"; hasError = true; }
   if (hasError) return;
 
-  const res = await fetch(`${API_URL}/auth/login/`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, password })
-  });
+  try {
+    console.log("Making login request to:", `${API_URL}/auth/login/`);
+    const res = await fetch(`${API_URL}/auth/login/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password })
+    });
 
-  if(res.ok) {
-    const data = await res.json();
-    token = data.access;
-    showNotification("Login successful!", false, "login");
+    if(res.ok) {
+      const data = await res.json();
+      token = data.access;
+      console.log("Login successful, token received");
+      showNotification("Login successful!", false, "login");
 
-    // Reset login form
-    document.getElementById("loginUsername").value = "";
-    document.getElementById("loginPassword").value = "";
+      // Reset login form
+      document.getElementById("loginUsername").value = "";
+      document.getElementById("loginPassword").value = "";
 
-    fetchActivities();
-    fetchSummary();
-  } else {
-    const data = await res.json();
-    showNotification(data.detail || "Login failed!", true, "login");
+      fetchActivities();
+      fetchSummary();
+    } else {
+      const data = await res.json();
+      showNotification(data.detail || "Login failed!", true, "login");
+    }
+  } catch (error) {
+    console.error("Login error:", error);
+    showNotification("Error connecting to server.", true, "login");
   }
 }
 
@@ -304,7 +321,7 @@ async function addActivity() {
     }
   } catch (error) {
     showNotification("Error connecting to server.", true, "activity");
-    console.error(error);
+    console.error("Add activity error:", error);
   }
 }
 
@@ -318,48 +335,59 @@ async function fetchActivities() {
   if(dateFilter) url += `date=${dateFilter}&`;
   if(url.endsWith("&")) url = url.slice(0, -1);
 
-  const res = await fetch(url, { headers: { "Authorization": `Bearer ${token}` } });
-  const data = await res.json();
+  try {
+    const res = await fetch(url, { headers: { "Authorization": `Bearer ${token}` } });
+    const data = await res.json();
 
-  const table = document.getElementById("activityTable");
-  const filterNote = document.getElementById("filterNotification");
+    const table = document.getElementById("activityTable");
+    const filterNote = document.getElementById("filterNotification");
 
-  // Clear previous table and notification
-  table.innerHTML = `<tr>
-    <th>Type</th><th>Duration</th><th>Distance</th><th>Calories</th><th>Date</th><th>Actions</th>
-  </tr>`;
-  filterNote.innerText = "";
-  filterNote.className = "notification";
+    // Clear previous table and notification
+    table.innerHTML = `<tr>
+      <th>Type</th><th>Duration</th><th>Distance</th><th>Calories</th><th>Date</th><th>Actions</th>
+    </tr>`;
+    filterNote.innerText = "";
+    filterNote.className = "notification";
 
-  if(data.length === 0) {
-    filterNote.innerText = "No activities found";
-    filterNote.className = "notification error";
-    return;
+    if(data.length === 0) {
+      filterNote.innerText = "No activities found";
+      filterNote.className = "notification error";
+      return;
+    }
+
+    data.forEach(act => {
+      const row = table.insertRow();
+      row.insertCell(0).innerText = act.activity_type;
+      row.insertCell(1).innerText = act.duration_minutes;
+      row.insertCell(2).innerText = act.distance_km;
+      row.insertCell(3).innerText = act.calories_burned;
+      row.insertCell(4).innerText = act.date;
+      const actions = row.insertCell(5);
+      actions.innerHTML = `<button onclick="deleteActivity(${act.id})">Delete</button>
+                           <button onclick="updateActivity(${act.id})">Update</button>`;
+    });
+  } catch (error) {
+    console.error("Fetch activities error:", error);
+    document.getElementById("filterNotification").innerText = "Error loading activities";
+    document.getElementById("filterNotification").className = "notification error";
   }
-
-  data.forEach(act => {
-    const row = table.insertRow();
-    row.insertCell(0).innerText = act.activity_type;
-    row.insertCell(1).innerText = act.duration_minutes;
-    row.insertCell(2).innerText = act.distance_km;
-    row.insertCell(3).innerText = act.calories_burned;
-    row.insertCell(4).innerText = act.date;
-    const actions = row.insertCell(5);
-    actions.innerHTML = `<button onclick="deleteActivity(${act.id})">Delete</button>
-                         <button onclick="updateActivity(${act.id})">Update</button>`;
-  });
 }
 
 // ---------------- DELETE ACTIVITY ----------------
 async function deleteActivity(id) {
-  const res = await fetch(`${API_URL}/activities/${id}/`, {
-    method: "DELETE",
-    headers: { "Authorization": `Bearer ${token}` }
-  });
-  if(res.ok) {
-    showNotification("Activity deleted!", false, "activity");
-    fetchActivities();
-    fetchSummary();
+  try {
+    const res = await fetch(`${API_URL}/activities/${id}/`, {
+      method: "DELETE",
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+    if(res.ok) {
+      showNotification("Activity deleted!", false, "activity");
+      fetchActivities();
+      fetchSummary();
+    }
+  } catch (error) {
+    console.error("Delete activity error:", error);
+    showNotification("Error deleting activity.", true, "activity");
   }
 }
 
@@ -378,34 +406,44 @@ async function updateActivity(id) {
   if(calories) body.calories_burned = Number(calories);
   if(date) body.date = date;
 
-  const res = await fetch(`${API_URL}/activities/${id}/`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-    body: JSON.stringify(body)
-  });
+  try {
+    const res = await fetch(`${API_URL}/activities/${id}/`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+      body: JSON.stringify(body)
+    });
 
-  if(res.ok) {
-    showNotification("Activity updated!", false, "activity");
-    fetchActivities();
-    fetchSummary();
-  } else {
-    const data = await res.json();
-    for (const key in data) {
-      if (errorFieldMap[key]) {
-        document.getElementById(errorFieldMap[key]).innerText = Array.isArray(data[key]) ? data[key].join(", ") : data[key];
+    if(res.ok) {
+      showNotification("Activity updated!", false, "activity");
+      fetchActivities();
+      fetchSummary();
+    } else {
+      const data = await res.json();
+      for (const key in data) {
+        if (errorFieldMap[key]) {
+          document.getElementById(errorFieldMap[key]).innerText = Array.isArray(data[key]) ? data[key].join(", ") : data[key];
+        }
       }
     }
+  } catch (error) {
+    console.error("Update activity error:", error);
+    showNotification("Error updating activity.", true, "activity");
   }
 }
 
 // ---------------- FETCH SUMMARY ----------------
 async function fetchSummary() {
-  const res = await fetch(`${API_URL}/activities/summary/`, {
-    headers: { "Authorization": `Bearer ${token}` }
-  });
-  const data = await res.json();
-  document.getElementById("summary").innerText =
-    `Total Calories: ${data.total_calories}, Total Distance: ${data.total_distance} km, Total Duration: ${data.total_duration} min`;
+  try {
+    const res = await fetch(`${API_URL}/activities/summary/`, {
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+    const data = await res.json();
+    document.getElementById("summary").innerText =
+      `Total Calories: ${data.total_calories}, Total Distance: ${data.total_distance} km, Total Duration: ${data.total_duration} min`;
+  } catch (error) {
+    console.error("Fetch summary error:", error);
+    document.getElementById("summary").innerText = "Error loading summary";
+  }
 }
 </script>
 
