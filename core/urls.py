@@ -14,7 +14,7 @@ urlpatterns = [
     path('', home, name='home'),
 
     # /api/ root redirect
-    path('api/', api_home, name='api-home'),
+    path('api/', api_home, name='api_home'),
 
 
     # Registration
