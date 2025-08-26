@@ -9,7 +9,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # ----------------------
 # SECURITY
 # ----------------------
-SECRET_KEY = (
+SECRET_KEY = os.environ.get(
     "DJANGO_SECRET_KEY",
     "django-insecure-ln@fevd66m5-wn)w@t7v3ton^3mr+6*n_89p3*zd_m&+bnt_yk"  # fallback for dev
 )
