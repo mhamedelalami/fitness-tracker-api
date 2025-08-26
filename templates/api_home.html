@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>API Home</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 2rem; background: #f5f5f5; }
+        h1 { color: #333; }
+        ul { list-style: none; padding: 0; }
+        li { margin-bottom: 0.8rem; }
+        a { text-decoration: none; color: #1a73e8; }
+        a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <h1>Welcome to the Fitness Tracker API</h1>
+    <p>Below is a list of all available API endpoints:</p>
+    <ul>
+        {% for endpoint in endpoints %}
+            <li><strong>{{ endpoint.name }}:</strong> <a href="{{ endpoint.path }}">{{ endpoint.path }}</a></li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
