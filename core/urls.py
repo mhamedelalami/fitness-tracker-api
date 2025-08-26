@@ -1,5 +1,5 @@
 from django.urls import path
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from users.views import RegisterView, UserProfileView, CustomLoginView, api_home, home
 from activities.views import ActivityListCreateView, ActivityDetailView, ActivitySummaryView
 from rest_framework_simplejwt.views import TokenRefreshView
