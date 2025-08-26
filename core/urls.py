@@ -1,5 +1,5 @@
 from django.urls import path
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from users.views import RegisterView, UserProfileView, CustomLoginView, api_home, home
 from activities.views import ActivityListCreateView, ActivityDetailView, ActivitySummaryView
 from rest_framework_simplejwt.views import TokenRefreshView
@@ -15,6 +15,8 @@ urlpatterns = [
 
     # /api/ root redirect
     path('api/', api_home, name='api_home'),
+    path('api/test/', lambda request: render(request, "api_home.html"), name='api-test'),
+
 
 
     # Registration
