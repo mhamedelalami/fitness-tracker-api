@@ -11,7 +11,14 @@ from django.contrib import admin
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    
+    # /api/ root redirect
+    path('api/', api_home, name='api_home'),
+    path('api/test/', lambda request: render(request, "api_home.html"), name='api-test'),
+        
+        # Home page
     path('', home, name='home'),
+
 
     # /api/ root redirect
     path('api/', api_home, name='api_home'),
