@@ -132,6 +132,11 @@ const API_URL = window.location.hostname === "127.0.0.1" || window.location.host
   : "https://simoalamidev.pythonanywhere.com/api";  // production
 let token = "";
 
+// Optional: show token in console for debugging
+function setToken(newToken) {
+  token = newToken;
+  console.log("JWT Token set:", token);
+}
 
 // Maps backend fields to input-error spans
 const errorFieldMap = {
