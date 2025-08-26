@@ -124,8 +124,14 @@
 </div>
 
 <script>
-const API_URL = "http://127.0.0.1:8000/api";
+{% comment %} const API_URL = "http://127.0.0.1:8000/api";
+let token = ""; {% endcomment %}
+
+const API_URL = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost"
+  ? "http://127.0.0.1:8000/api"   // local development
+  : "https://simoalamidev.pythonanywhere.com/api";  // production
 let token = "";
+
 
 // Maps backend fields to input-error spans
 const errorFieldMap = {
