@@ -1,13 +1,13 @@
 from django.urls import path
-from django.shortcuts import redirect, render
+from django.shortcuts import render
 from users.views import RegisterView, UserProfileView, CustomLoginView, api_home, home
 from activities.views import ActivityListCreateView, ActivityDetailView, ActivitySummaryView
 from rest_framework_simplejwt.views import TokenRefreshView
 from django.contrib import admin
 
 # Redirect /api/ to the homepage
-def api_root_redirect(request):
-    return redirect('/')  # Redirects to your home page
+# def api_root_redirect(request):
+#     return redirect('/')  # Redirects to your home page
 
 urlpatterns = [
     path('admin/', admin.site.urls),
