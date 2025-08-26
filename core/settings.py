@@ -2,7 +2,7 @@ from pathlib import Path
 import os
 from datetime import timedelta
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -14,11 +14,11 @@ SECRET_KEY = os.environ.get(
     "django-insecure-ln@fevd66m5-wn)w@t7v3ton^3mr+6*n_89p3*zd_m&+bnt_yk"  # fallback for dev
 )
 
-# False in production (set DJANGO_DEBUG=False in env on PythonAnywhere)
+
 DEBUG = os.environ.get("DJANGO_DEBUG", "True") == "True"
 
-# On PythonAnywhere, add your domain (e.g. yourusername.pythonanywhere.com)
-ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost,.pythonanywhere.com").split(",")
+
+ALLOWED_HOSTS = ["simoalamiDev.pythonanywhere.com", "127.0.0.1", "localhost"]
 
 
 # ----------------------
@@ -106,10 +106,10 @@ USE_TZ = True
 # ----------------------
 STATIC_URL = "/static/"
 
-# Where collectstatic will put files in production
+
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-# Keep this for local dev (safe to have both)
+
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
