@@ -6,28 +6,9 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.shortcuts import render
-from django.urls import get_resolver
 
 def home(request):
     return render(request, "home.html")
-
-def api_home(request):
-    resolver = get_resolver()
-    patterns = resolver.url_patterns
-    endpoints = []
-
-    def extract_patterns(patterns, prefix=''):
-        for pattern in patterns:
-            if hasattr(pattern, 'url_patterns'):
-                # Include nested patterns (like in admin or other apps)
-                extract_patterns(pattern.url_patterns, prefix + getattr(pattern, 'pattern', '').regex.pattern)
-            else:
-                path_str = prefix + str(pattern.pattern)
-                name = pattern.name if pattern.name else "no-name"
-                endpoints.append({"path": "/" + path_str.strip("/"), "name": name})
-
-    extract_patterns(patterns)
-    return render(request, "api_home.html", {"endpoints": endpoints})
 
 # User registration
 class RegisterView(generics.CreateAPIView):
