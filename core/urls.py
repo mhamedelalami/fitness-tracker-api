@@ -1,16 +1,21 @@
 from django.urls import path
 from django.shortcuts import redirect
-from users.views import RegisterView, UserProfileView, CustomLoginView, home
+from users.views import RegisterView, UserProfileView, CustomLoginView, api_home, home
 from activities.views import ActivityListCreateView, ActivityDetailView, ActivitySummaryView
 from rest_framework_simplejwt.views import TokenRefreshView
 from django.contrib import admin
 
+# Redirect /api/ to the homepage
+def api_root_redirect(request):
+    return redirect('/')  # Redirects to your home page
+
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', home, name='home'), 
+    path('', home, name='home'),
 
-    # Redirect /api/ to home
-    path('api/', lambda request: redirect('home')),
+    # /api/ root redirect
+    path('api/', api_home, name='api-home'),
+
 
     # Registration
     path('api/auth/register/', RegisterView.as_view(), name='register'),
