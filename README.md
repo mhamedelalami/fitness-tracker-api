@@ -181,6 +181,30 @@ period=week
 
 ---
 
+## ✅ Week 5 Progress
+
+**Deployment & Production Testing**
+
+* Successfully deployed the API on **PythonAnywhere**.
+* Configured `uWSGI`, static files (`collectstatic`), and proper project structure for production.
+* Adjusted `settings.py` for production use (static files, allowed hosts, JWT secret key handling).
+* Performed **end-to-end testing on production** using `curl` and Postman:
+  * User registration, login, token refresh
+  * Protected endpoints with JWT tokens
+  * Activity CRUD operations
+  * Summary endpoint
+* Fixed issues with authentication tokens and time sync on server.
+* Verified **static files (CSS/JS)** are properly served.
+* Confirmed the API behaves the same **locally and in production**.
+
+**Final Cleanup**
+
+* Cleaned up environment variables and project configuration.
+* Ensured secret keys and sensitive data are not hardcoded.
+* Verified error logs for smooth operation in production.
+
+---
+
 ### 🧪 Postman Testing Guide
 
 1. **Register a new user**
